@@ -101,6 +101,17 @@ internal static class Telemetry
                 "CorrelationId"),
             s_metricConfiguration);
 
+    private static readonly Metric s_linkCountMetric =
+        s_telemetryClient.GetMetric(
+            new MetricIdentifier(
+                null,
+                "Link",
+                "LinkType",
+                "Repo",
+                "Branch",
+                "CorrelationId"),
+            s_metricConfiguration);
+
     private static readonly string s_version =
         typeof(Telemetry).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "<null>";
 
@@ -252,6 +263,21 @@ internal static class Telemetry
                         s_correlationId,
                         s_sessionId));
             }
+        }
+    }
+
+    public static void TrackLink(LinkType linkType)
+    {
+        if (!s_isRealTimeBuild.Value)
+        {
+            TrackValueWithEnsurance(
+                    s_linkCountMetric.Identifier.MetricId,
+                    s_linkCountMetric.TrackValue(
+                        1,
+                        linkType.ToString(),
+                        s_repo,
+                        s_branch,
+                        s_correlationId));
         }
     }
 

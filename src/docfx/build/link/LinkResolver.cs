@@ -95,7 +95,6 @@ internal class LinkResolver
             inclusionRoot,
             linkNode,
             tagName);
-
         inclusionRoot ??= referencingFile;
         if (!isCrossReference)
         {
@@ -134,6 +133,7 @@ internal class LinkResolver
         var (error, file, query, fragment, linkType) = TryResolveFile(inclusionRoot, hrefRelativeTo, decodedHref);
         errors.AddIfNotNull(error);
 
+        Telemetry.TrackLink(linkType);
         if (linkType == LinkType.WindowsAbsolutePath)
         {
             return (errors, "", fragment, linkType, null, false);
