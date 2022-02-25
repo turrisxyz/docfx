@@ -266,7 +266,7 @@ internal static class Telemetry
         }
     }
 
-    public static void TrackLink(LinkType linkType)
+    public static void TrackLink(string linkType)
     {
         if (!s_isRealTimeBuild.Value)
         {
@@ -274,7 +274,7 @@ internal static class Telemetry
                     s_linkCountMetric.Identifier.MetricId,
                     s_linkCountMetric.TrackValue(
                         1,
-                        linkType.ToString(),
+                        linkType,
                         s_repo,
                         s_branch,
                         s_correlationId));

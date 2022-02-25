@@ -112,6 +112,7 @@ internal class LinkResolver
 
         if (!string.IsNullOrEmpty(link))
         {
+            Telemetry.TrackLink(linkType.ToString());
             _fileLinkMapBuilder.AddFileLink(inclusionRoot, referencingFile, link, href.Source);
         }
 
@@ -133,7 +134,6 @@ internal class LinkResolver
         var (error, file, query, fragment, linkType) = TryResolveFile(inclusionRoot, hrefRelativeTo, decodedHref);
         errors.AddIfNotNull(error);
 
-        Telemetry.TrackLink(linkType);
         if (linkType == LinkType.WindowsAbsolutePath)
         {
             return (errors, "", fragment, linkType, null, false);
@@ -156,7 +156,11 @@ internal class LinkResolver
                 return (errors, "", fragment, LinkType.AbsolutePath, null, false);
             }
 
-            return (errors, resolvedHref, fragment, LinkType.AbsolutePath, null, false);
+            if (href != resolvedHref)
+            {
+                linkType = LinkType.AbsolutePath;
+            }
+            return (errors, resolvedHref, fragment, linkType, null, false);
         }
 
         // Cannot resolve the file, leave href as is
