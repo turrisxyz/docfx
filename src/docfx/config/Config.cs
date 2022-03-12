@@ -72,6 +72,11 @@ internal class Config : PreloadConfig
     public bool OutputPdf { get; init; }
 
     /// <summary>
+    /// Generates one PDF per TOC in the output directory.
+    /// </summary>
+    public bool Pdf { get; init; }
+
+    /// <summary>
     /// Gets whether the repository a reference repository.
     /// </summary>
     public bool IsReferenceRepository { get; init; }

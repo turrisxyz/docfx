@@ -21,6 +21,8 @@ internal class CommandLineOptions
 
     public bool DryRun { get; set; }
 
+    public bool Pdf { get; init; }
+
     public bool NoDrySync { get; init; }
 
     public bool Stdin { get; init; }
@@ -57,6 +59,7 @@ internal class CommandLineOptions
         {
             ["dryRun"] = DryRun,
             ["noDrySync"] = NoDrySync,
+            ["pdf"] = Pdf,
         };
 
         if (Output != null)
