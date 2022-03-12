@@ -459,7 +459,7 @@ internal static class HtmlUtility
         return $"/{locale}{href}";
     }
 
-    private static bool IsLink(
+    internal static bool IsLink(
         ref HtmlToken token, in HtmlAttribute attribute, [NotNullWhen(true)] out string? tagName, [NotNullWhen(true)] out string? attributeName)
     {
         if (token.NameIs("a") && attribute.NameIs("href"))

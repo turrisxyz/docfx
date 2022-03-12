@@ -97,7 +97,7 @@ public static class Docfx
         command.AddOption(new Option<string>(
             new[] { "-o", "--output" }, "Output directory in which to place built artifacts."));
         command.AddOption(new Option<OutputType>(
-            "--output-type", "Output directory in which to place built artifacts."));
+            "--output-type", "Output file type: HTML, JSON or PDF."));
         command.AddOption(new Option<bool>(
             "--dry-run", "Do not produce build artifact and only produce validation result."));
         command.AddOption(new Option<bool>(

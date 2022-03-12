@@ -19,4 +19,9 @@ internal enum OutputType
     /// Liquid JSON input format, same content as stored in docs document hosting service.
     /// </summary>
     PageJson,
+
+    /// <summary>
+    /// One PDF per TOC.
+    /// </summary>
+    Pdf,
 }

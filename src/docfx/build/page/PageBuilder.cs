@@ -28,6 +28,7 @@ internal class PageBuilder
     private readonly RedirectionProvider _redirectionProvider;
     private readonly JsonSchemaTransformer _jsonSchemaTransformer;
     private readonly LearnHierarchyBuilder _learnHierarchyBuilder;
+    private readonly PdfBuilder _pdfBuilder;
 
     public PageBuilder(
         Config config,
@@ -48,7 +49,8 @@ internal class PageBuilder
         MarkdownEngine markdownEngine,
         RedirectionProvider redirectionProvider,
         JsonSchemaTransformer jsonSchemaTransformer,
-        LearnHierarchyBuilder learnHierarchyBuilder)
+        LearnHierarchyBuilder learnHierarchyBuilder,
+        PdfBuilder pdfBuilder)
     {
         _config = config;
         _buildOptions = buildOptions;
@@ -69,6 +71,7 @@ internal class PageBuilder
         _redirectionProvider = redirectionProvider;
         _jsonSchemaTransformer = jsonSchemaTransformer;
         _learnHierarchyBuilder = learnHierarchyBuilder;
+        _pdfBuilder = pdfBuilder;
     }
 
     public void Build(ErrorBuilder errors, FilePath file)
@@ -93,7 +96,14 @@ internal class PageBuilder
 
         if (!errors.FileHasError(file) && !_config.DryRun)
         {
-            if (output is string str)
+            if (_pdfBuilder != null)
+            {
+                if (output is string str)
+                {
+                    _pdfBuilder.AddPage(file, str);
+                }
+            }
+            else if (output is string str)
             {
                 _output.WriteText(outputPath, str);
             }
@@ -155,6 +165,11 @@ internal class PageBuilder
             return (templateModel, templateMetadata);
         }
 
+        if (_config.OutputType == OutputType.Pdf)
+        {
+            return (templateModel.Content, templateMetadata);
+        }
+
         try
         {
             var html = _templateEngine.RunLiquid(errors, mime, templateModel);
@@ -169,7 +184,7 @@ internal class PageBuilder
 
     private (object output, JObject metadata) CreateDataOutput(FilePath file, JObject sourceModel)
     {
-        if (_config.DryRun)
+        if (_config.DryRun || _config.OutputType == OutputType.Pdf)
         {
             return (new JObject(), new JObject());
         }

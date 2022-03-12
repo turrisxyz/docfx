@@ -158,10 +158,11 @@ internal class DocsetBuilder
             _progressReporter.Report("Building...");
 
             var output = new Output(_buildOptions.OutputPath, _input, _config.DryRun);
+            var pdfBuilder = _config.OutputType == OutputType.Pdf ? new PdfBuilder(_errors, output, _tocMap, _tocLoader, _documentProvider) : null;
             var publishModelBuilder = new PublishModelBuilder(_config, _errors, _monikerProvider, _buildOptions, _sourceMap, _documentProvider);
             var resourceBuilder = new ResourceBuilder(_input, _documentProvider, _config, output, publishModelBuilder);
             var learnHierarchyBuilder = new LearnHierarchyBuilder(_contentValidator);
-            var pageBuilder = new PageBuilder(_config, _buildOptions, _input, output, _documentProvider, _metadataProvider, _monikerProvider, _templateEngine, _tocMap, _linkResolver, _contributionProvider, _bookmarkValidator, publishModelBuilder, _contentValidator, _metadataValidator, _markdownEngine, _redirectionProvider, _jsonSchemaTransformer, learnHierarchyBuilder);
+            var pageBuilder = new PageBuilder(_config, _buildOptions, _input, output, _documentProvider, _metadataProvider, _monikerProvider, _templateEngine, _tocMap, _linkResolver, _contributionProvider, _bookmarkValidator, publishModelBuilder, _contentValidator, _metadataValidator, _markdownEngine, _redirectionProvider, _jsonSchemaTransformer, learnHierarchyBuilder, pdfBuilder);
             var tocBuilder = new TocBuilder(_config, _tocLoader, _contentValidator, _metadataProvider, _metadataValidator, _documentProvider, _monikerProvider, publishModelBuilder, _templateEngine, output);
             var redirectionBuilder = new RedirectionBuilder(publishModelBuilder, _redirectionProvider, _documentProvider);
 
@@ -169,8 +170,19 @@ internal class DocsetBuilder
 
             using (var scope = Progress.Start($"Building {filesToBuild.Count} files"))
             {
-                ParallelUtility.ForEach(scope, _errors, filesToBuild, file => BuildFile(file, _contentValidator, resourceBuilder, pageBuilder, tocBuilder, redirectionBuilder));
-                ParallelUtility.ForEach(scope, _errors, _linkResolver.GetAdditionalResources(), file => resourceBuilder.Build(file));
+                if (_config.OutputType == OutputType.Pdf)
+                {
+                    ParallelUtility.ForEach(
+                        scope,
+                        _errors,
+                        filesToBuild.Where(file => _documentProvider.GetContentType(file) == ContentType.Page),
+                        file => pageBuilder.Build(_errors, file));
+                }
+                else
+                {
+                    ParallelUtility.ForEach(scope, _errors, filesToBuild, file => BuildFile(file, _contentValidator, resourceBuilder, pageBuilder, tocBuilder, redirectionBuilder));
+                    ParallelUtility.ForEach(scope, _errors, _linkResolver.GetAdditionalResources(), file => resourceBuilder.Build(file));
+                }
             }
 
             Parallel.Invoke(
@@ -190,6 +202,12 @@ internal class DocsetBuilder
             }
 
             _templateEngine.FreeJavaScriptEngineMemory();
+
+            if (pdfBuilder != null)
+            {
+                pdfBuilder.Build();
+                return;
+            }
 
             // TODO: explicitly state that ToXrefMapModel produces errors
             var xrefMapModel = _xrefResolver.ToXrefMapModel();

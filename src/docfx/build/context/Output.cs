@@ -64,6 +64,16 @@ internal class Output
     }
 
     /// <summary>
+    /// Opens an output stream for writing to output file.
+    /// </summary>
+    public Stream WriteStream(string destRelativePath)
+    {
+        EnsureNoDryRun();
+
+        return File.OpenWrite(EnsureDestinationPath(destRelativePath));
+    }
+
+    /// <summary>
     /// Copies a file from source to destination, throws if source does not exists.
     /// Throws if multiple threads trying to write to the same destination concurrently.
     /// </summary>
