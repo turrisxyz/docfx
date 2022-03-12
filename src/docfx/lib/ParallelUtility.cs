@@ -8,6 +8,31 @@ internal static class ParallelUtility
     private static readonly int s_maxParallelism = Math.Max(8, Environment.ProcessorCount * 2);
     private static readonly ParallelOptions s_parallelOptions = new() { MaxDegreeOfParallelism = s_maxParallelism };
 
+    public static void ForEach<T>(LogScope scope, ErrorBuilder errors, IEnumerable<T> source, Action<T, int> action)
+    {
+        var done = 0;
+        var total = source.Count();
+
+        Parallel.ForEach(source, s_parallelOptions, (item, state, i) =>
+        {
+            try
+            {
+                action(item, (int)i);
+            }
+            catch (Exception ex) when (DocfxException.IsDocfxException(ex, out var dex))
+            {
+                errors.AddRange(dex);
+            }
+            catch
+            {
+                Console.WriteLine($"Error processing '{UrlUtility.SanitizeUrl(item?.ToString())}'");
+                throw;
+            }
+
+            Progress.Update(scope, Interlocked.Increment(ref done), total);
+        });
+    }
+
     public static void ForEach<T>(LogScope scope, ErrorBuilder errors, IEnumerable<T> source, Action<T> action)
     {
         var done = 0;

@@ -46,7 +46,6 @@ internal class DocsetBuilder
     private readonly TocLoader _tocLoader;
     private readonly TocMap _tocMap;
     private readonly HtmlSanitizer _htmlSanitizer;
-    private readonly PdfBuilder _pdfBuilder;
 
     public BuildOptions BuildOptions => _buildOptions;
 
@@ -98,7 +97,6 @@ internal class DocsetBuilder
         _tocParser = new(_input, _markdownEngine);
         _tocLoader = new(_buildOptions, _input, _linkResolver, _xrefResolver, _tocParser, _monikerProvider, _dependencyMapBuilder, _contentValidator, _config, _errors, _buildScope);
         _tocMap = new(_config, _errors, _input, _buildScope, _dependencyMapBuilder, _tocParser, _tocLoader, _documentProvider, _contentValidator, _publishUrlMap);
-        _pdfBuilder = new(_errors, _tocLoader);
     }
 
     public static DocsetBuilder? Create(
@@ -213,7 +211,8 @@ internal class DocsetBuilder
 
             if (_config.Pdf)
             {
-                _pdfBuilder.BuildPdf(_tocMap.GetFiles().ToArray());
+                var pdfBuilder = new PdfBuilder(_errors, _tocLoader, output, _documentProvider);
+                pdfBuilder.BuildPdf(_tocMap.GetFiles().ToArray());
             }
 
             new OpsPostProcessor(_config, _errors, _buildOptions, _opsAccessor, _jsonSchemaTransformer.GetValidateExternalXrefs()).Run();
